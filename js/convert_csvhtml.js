@@ -8,6 +8,11 @@ Csv2Html2Excel = {
         var allow_download = options.allow_download || false;
         var csv_options = options.csv_options || {};
         var datatables_options = options.datatables_options || {};
+
+        var compare_col1 = window.CsvViewerConfig.compareCol1 || 2;
+        var compare_col2 = window.CsvViewerConfig.compareCol2 || 3;
+        var highlight_target_col = window.CsvViewerConfig.highlightTargetCol || compare_col2;
+
         var custom_formatting = options.custom_formatting || [];
         var customTemplates = {};
         $.each(custom_formatting, function (i, v) {
@@ -26,6 +31,7 @@ Csv2Html2Excel = {
             var $tableHead = $("<thead></thead>");
             var csvHeaderRow = csvData[0];
             var $tableHeadRow = $("<tr></tr>");
+            $tableHeadRow.append($("<th></th>").text("S. No."));
             for (var headerIdx = 0; headerIdx < csvHeaderRow.length; headerIdx++) {
                 $tableHeadRow.append($("<th></th>").text(csvHeaderRow[headerIdx]));
             }
@@ -38,16 +44,18 @@ Csv2Html2Excel = {
                 var $tableBodyRow = $("<tr></tr>");
                 var row = csvData[rowIdx];
 
+                $tableBodyRow.append($("<td></td>").text(rowIdx));
+
                 for (var colIdx = 0; colIdx < row.length; colIdx++) {
                     var $tableBodyRowTd = $("<td></td>");
-                    if (colIdx === 3 && row.length >= 4) {
-                        var diff = Diff.diffWords(row[2], row[3]);
+                    if (colIdx === highlight_target_col && row.length > Math.max(compare_col1, compare_col2)) {
+                        var diff = Diff.diffWords(row[compare_col1], row[compare_col2]);
                         var formatted = "";
                         diff.forEach(function (part) {
                             if (part.added) {
-                                formatted += "<span style='color:green'>" + part.value + "</span>";
+                                formatted += "<span style='color:green; font-weight:bold'>" + part.value + "</span>";
                             } else if (part.removed) {
-                                formatted += "<span style='color:red;text-decoration:line-through'>" + part.value + "</span>";
+                                formatted += "<span style='color:red; text-decoration:line-through; font-weight:bold'>" + part.value + "</span>";
                             } else {
                                 formatted += part.value;
                             }
@@ -81,22 +89,20 @@ Csv2Html2Excel = {
                     const tableHtml = document.getElementById(el + "-table").outerHTML;
 
                     const blob = new Blob([
-                        `<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\">
-                          <head>
-                            <!--[if gte mso 9]><xml>
-                            <x:ExcelWorkbook>
-                              <x:ExcelWorksheets>
-                                <x:ExcelWorksheet>
-                                  <x:Name>Sheet1</x:Name>
-                                  <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                                </x:ExcelWorksheet>
-                              </x:ExcelWorksheets>
-                            </x:ExcelWorkbook>
-                            </xml><![endif]-->
-                          </head>
-                          <body>
-                            ${tableHtml}
-                          </body>
+                        `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+                        <head>
+                        <!--[if gte mso 9]><xml>
+                        <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                            <x:Name>Sheet1</x:Name>
+                            <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                        </xml><![endif]-->
+                        </head>
+                        <body>${tableHtml}</body>
                         </html>`
                     ], { type: "application/vnd.ms-excel" });
 
@@ -109,4 +115,3 @@ Csv2Html2Excel = {
         });
     }
 };
-

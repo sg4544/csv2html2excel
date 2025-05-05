@@ -35,13 +35,22 @@
             word-break: break-word;
             min-width: 150px;
         } 
+	table td:nth-child(4),
+        table th:nth-child(4),
+        table td:nth-child(5),
+        table th:nth-child(5) {
+            width: 250px;
+            max-width: 250px;
+            white-space: normal !important;
+            word-break: break-word;
+        } 
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="table-container">
-            <h1 id="page-title-header">CSV Table Viewer</h1>
+            <h1 id="page-title-header">Csv2Html2Excel</h1>
             <div id="download-container" class="mb-3"></div>
             <div id="table-container"></div>
         </div>
