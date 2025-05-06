@@ -24,11 +24,14 @@
             margin-bottom: 1.5rem;
         }
 
-        .table-container {
+	.table-container {
             background: white;
             padding: 1.5rem;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            max-width: 100%;          /* allow full-width growth */
+            width: 80vw;              /* occupy ~80% of the screen */
+            margin: auto;             /* center horizontally */
         }
 	table td, table th {
             border-right: 1px solid #ddd;
@@ -68,7 +71,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div class="table-container">
             <h1 id="page-title-header">Csv2Html2Excel</h1>
             <div id="download-container" class="mb-3"></div>
