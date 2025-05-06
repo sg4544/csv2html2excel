@@ -30,19 +30,39 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
-	table td:nth-child(2), table th:nth-child(2) {
+	table td, table th {
+            border-right: 1px solid #ddd;
+            border-left: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+	table th {
+            vertical-align: middle !important;
+            text-align: center;           /* Optional: also center text horizontally */
+            line-height: 1.4;             /* Helps with vertical balance */
+            height: 40px;                 /* Adjust to fit your content */
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+	table td:nth-child(2),
+	table th:nth-child(2) {
             white-space: normal !important;
             word-break: break-word;
-            min-width: 150px;
+            max-width: 220px;
+	    min-width: 50px;
         } 
 	table td:nth-child(4),
         table th:nth-child(4),
         table td:nth-child(5),
         table th:nth-child(5) {
-            width: 250px;
-            max-width: 250px;
+            width: 500px;
+            max-width: 750px;
             white-space: normal !important;
             word-break: break-word;
+	    font-size: 13px;
         } 
     </style>
 </head>
@@ -67,8 +87,14 @@
     <script src="js/convert_csvhtml.js"></script>
 
     <script>
-        document.title = window.CsvViewerConfig.pageTitle;
-        document.querySelector("#page-title-header").textContent = window.CsvViewerConfig.pageTitle;
+	const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const yyyy = today.getFullYear();
+        const formattedDate = `${dd}-${mm}-${yyyy}`;
+
+        document.title = `${window.CsvViewerConfig.pageTitle} - ${formattedDate}`;
+        document.querySelector("#page-title-header").textContent = `${window.CsvViewerConfig.pageTitle} - ${formattedDate}`;    
 
         Csv2Html2Excel.init({
             csv_path: window.CsvViewerConfig.csvFilePath,

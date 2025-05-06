@@ -31,7 +31,7 @@ Csv2Html2Excel = {
             var $tableHead = $("<thead></thead>");
             var csvHeaderRow = csvData[0];
             var $tableHeadRow = $("<tr></tr>");
-            $tableHeadRow.append($("<th></th>").text("S. No."));
+            $tableHeadRow.append($("<th></th>").text("No."));
             for (var headerIdx = 0; headerIdx < csvHeaderRow.length; headerIdx++) {
                 $tableHeadRow.append($("<th></th>").text(csvHeaderRow[headerIdx]));
             }
