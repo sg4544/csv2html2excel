@@ -44,7 +44,7 @@ Csv2Html2Excel = {
                 var $tableBodyRow = $("<tr></tr>");
                 var row = csvData[rowIdx];
 
-                $tableBodyRow.append($("<td></td>").text(rowIdx)); // S. No.
+                $tableBodyRow.append($("<td></td>").text(rowIdx));
 
                 for (var colIdx = 0; colIdx < row.length; colIdx++) {
                     var $tableBodyRowTd = $("<td></td>");
@@ -86,47 +86,32 @@ Csv2Html2Excel = {
                 );
 
                 $("#download-xls").on("click", function () {
-                    const originalTable = document.getElementById(el + "-table");
-                    const clonedTable = originalTable.cloneNode(true);
+                    const tableHtml = document.getElementById(el + "-table").outerHTML;
 
-                    // Replace checkboxes with Yes/No
-                    $(clonedTable).find("tr").each(function () {
-                        const $checkboxCell = $(this).find("td:last-child, th:last-child");
-                        const checkbox = $checkboxCell.find("input[type='checkbox']");
-                        if (checkbox.length) {
-                            const isChecked = checkbox.prop("checked");
-                            $checkboxCell.text(isChecked ? "Yes" : "No");
-                        }
-                    });
-
-                    const tableHtml = clonedTable.outerHTML;
-
-                    const blob = new Blob([`
-                        <html xmlns:x="urn:schemas-microsoft-com:office:excel">
-                            <head>
-                                <!--[if gte mso 9]><xml>
-                                    <x:ExcelWorkbook>
-                                        <x:ExcelWorksheets>
-                                            <x:ExcelWorksheet>
-                                                <x:Name>Sheet1</x:Name>
-                                                <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                                            </x:ExcelWorksheet>
-                                        </x:ExcelWorksheets>
-                                    </x:ExcelWorkbook>
-                                </xml><![endif]-->
-                            </head>
-                            <body>${tableHtml}</body>
-                        </html>
-                    `], { type: "application/vnd.ms-excel" });
+                    const blob = new Blob([
+                        `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+                        <head>
+                        <!--[if gte mso 9]><xml>
+                        <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                            <x:Name>Sheet1</x:Name>
+                            <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                        </xml><![endif]-->
+                        </head>
+                        <body>${tableHtml}</body>
+                        </html>`
+                    ], { type: "application/vnd.ms-excel" });
 
                     const link = document.createElement("a");
                     link.href = URL.createObjectURL(blob);
-                    const title = document.title.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // Sanitize for filename
-                    link.download = `${title}.xls`;			
+                    link.download = "export.xls";
                     link.click();
                 });
             }
         });
     }
 };
-
