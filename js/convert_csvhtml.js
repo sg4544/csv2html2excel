@@ -12,6 +12,8 @@ Csv2Html2Excel = {
         var compare_col1 = window.CsvViewerConfig.compareCol1 || 2;
         var compare_col2 = window.CsvViewerConfig.compareCol2 || 3;
         var highlight_target_col = window.CsvViewerConfig.highlightTargetCol || compare_col2;
+        var deprecatedLabel = window.CsvViewerConfig.deprecatedLabel || "DPRCTD";
+        var newLabel = window.CsvViewerConfig.newLabel || "NEW";
 
         var custom_formatting = options.custom_formatting || [];
         var customTemplates = {};
@@ -31,11 +33,11 @@ Csv2Html2Excel = {
             var $tableHead = $("<thead></thead>");
             var csvHeaderRow = csvData[0];
             var $tableHeadRow = $("<tr></tr>");
-            $tableHeadRow.append($("<th></th>").text("No."));
+            $tableHeadRow.append($("<th></th>").text("S. No."));
             for (var headerIdx = 0; headerIdx < csvHeaderRow.length; headerIdx++) {
                 $tableHeadRow.append($("<th></th>").text(csvHeaderRow[headerIdx]));
             }
-            $tableHeadRow.append($("<th></th>").text("Accept"));
+            $tableHeadRow.append($("<th style='border-right: 1px solid #ddd'></th>").text("Accept"));
             $tableHead.append($tableHeadRow);
             $table.append($tableHead);
 
@@ -44,23 +46,39 @@ Csv2Html2Excel = {
                 var $tableBodyRow = $("<tr></tr>");
                 var row = csvData[rowIdx];
 
-                $tableBodyRow.append($("<td></td>").text(rowIdx)); // S. No.
+                $tableBodyRow.append($("<td></td>").text(rowIdx));
 
-                for (var colIdx = 0; colIdx < row.length; colIdx++) {
+                for (var colIdx = 0; colIdx < csvHeaderRow.length; colIdx++) {
                     var $tableBodyRowTd = $("<td></td>");
-                    if (colIdx === highlight_target_col && row.length > Math.max(compare_col1, compare_col2)) {
-                        var diff = Diff.diffWords(row[compare_col1], row[compare_col2]);
-                        var formatted = "";
-                        diff.forEach(function (part) {
-                            if (part.added) {
-                                formatted += "<span style='color:green; font-weight:bold'>" + part.value + "</span>";
-                            } else if (part.removed) {
-                                formatted += "<span style='color:red; text-decoration:line-through; font-weight:bold'>" + part.value + "</span>";
-                            } else {
-                                formatted += part.value;
-                            }
-                        });
-                        $tableBodyRowTd.html(formatted);
+
+                    if (colIdx === compare_col1 && row[compare_col2]?.trim() === "") {
+                        var value = row[colIdx] || "";
+                        $tableBodyRowTd.html(value + " <span style='color:red'>(" + deprecatedLabel + ")</span>");
+                    } else if (colIdx === compare_col2 && row[compare_col1]?.trim() === "") {
+                        var value = row[colIdx] || "";
+                        $tableBodyRowTd.html(value + " <span style='color:green'>(" + newLabel + ")</span>");
+                    } else if (colIdx === highlight_target_col && row.length > Math.max(compare_col1, compare_col2)) {
+                        var compareValue = row[compare_col2] || "";
+                        if (compareValue.trim() === "") {
+                            $tableBodyRowTd.html("");
+                        } else {
+                            var diff = Diff.diffWords(row[compare_col1], row[compare_col2]);
+                            var formatted = "";
+                            diff.forEach(function (part) {
+                                if (part.added) {
+                                    formatted += "<span style='color:green; font-weight:bold'>" + part.value + "</span>";
+                                } else if (part.removed) {
+                                    formatted += "<span style='color:red; text-decoration:line-through; font-weight:bold'>" + part.value + "</span>";
+                                } else {
+                                    formatted += part.value;
+                                }
+                            });
+                            $tableBodyRowTd.html(formatted);
+                        }
+                    } else if (csvHeaderRow[colIdx].toLowerCase() === "notes") {
+                        var noteKey = `note_${rowIdx}`;
+                        var savedNote = localStorage.getItem(noteKey) || (row[colIdx] || "");
+                        $tableBodyRowTd.html(`<input type='text' class='form-control note-input' data-row='${rowIdx}' value='${savedNote}'>`);
                     } else {
                         var cellTemplateFunc = customTemplates[colIdx];
                         if (cellTemplateFunc) {
@@ -72,7 +90,11 @@ Csv2Html2Excel = {
                     $tableBodyRow.append($tableBodyRowTd);
                 }
 
-                var $acceptCell = $("<td></td>").html("<input type='checkbox' class='accept-checkbox'>");
+                var acceptKey = `accept_${rowIdx}`;
+                var isChecked = localStorage.getItem(acceptKey) === 'true';
+                var $acceptCell = $("<td style='text-align:center; border-right: 1px solid #ddd'></td>").html(
+                    `<input type='checkbox' class='accept-checkbox' data-row='${rowIdx}' ${isChecked ? 'checked' : ''}>`
+                );
                 $tableBodyRow.append($acceptCell);
                 $tableBody.append($tableBodyRow);
             }
@@ -89,13 +111,20 @@ Csv2Html2Excel = {
                     const originalTable = document.getElementById(el + "-table");
                     const clonedTable = originalTable.cloneNode(true);
 
-                    // Replace checkboxes with Yes/No
                     $(clonedTable).find("tr").each(function () {
-                        const $checkboxCell = $(this).find("td:last-child, th:last-child");
-                        const checkbox = $checkboxCell.find("input[type='checkbox']");
+                        const $cells = $(this).find("td, th");
+                        const $acceptCell = $cells.last();
+                        const checkbox = $acceptCell.find("input[type='checkbox']");
                         if (checkbox.length) {
-                            const isChecked = checkbox.prop("checked");
-                            $checkboxCell.text(isChecked ? "Yes" : "No");
+                            $acceptCell.text(checkbox.prop("checked") ? "Yes" : "No");
+                        }
+
+                        for (let i = 0; i < $cells.length; i++) {
+                            const noteInput = $cells.eq(i).find("input[type='text']");
+                            if (noteInput.length) {
+                                $cells.eq(i).text(noteInput.val());
+                                break;
+                            }
                         }
                     });
 
@@ -121,12 +150,23 @@ Csv2Html2Excel = {
 
                     const link = document.createElement("a");
                     link.href = URL.createObjectURL(blob);
-                    const title = document.title.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // Sanitize for filename
-                    link.download = `${title}.xls`;			
+                    const title = document.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    link.download = `${title}.xls`;
                     link.click();
                 });
             }
+
+            // Save Notes on input
+            $(document).on('input', '.note-input', function () {
+                var rowId = $(this).data('row');
+                localStorage.setItem(`note_${rowId}`, $(this).val());
+            });
+
+            // Save Accept checkbox on toggle
+            $(document).on('change', '.accept-checkbox', function () {
+                var rowId = $(this).data('row');
+                localStorage.setItem(`accept_${rowId}`, $(this).is(':checked'));
+            });
         });
     }
 };
-
