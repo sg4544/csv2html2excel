@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title id="page-title">Data Reports - </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+        }
+        .report-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            max-width: 600px;
+        }
+        .report-list li {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="header-title">Data Reports - </h1>
+    <ul class="report-list">
+        <li>Report 1: <a href="report1.html">Open report1.html</a></li>
+        <li>Report 2: <a href="report2.html">Open report2.html</a></li>
+        <li>Report 3: <a href="report3.html">Open report3.html</a></li>
+        <li>Report 4: <a href="report4.html">Open report4.html</a></li>
+    </ul>
+
+    <script>
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        const formattedDate = `${dd}-${mm}-${yyyy}`;
+        document.getElementById('page-title').textContent += formattedDate;
+        document.getElementById('header-title').textContent += formattedDate;
+    </script>
+
+</body>
+</html>
