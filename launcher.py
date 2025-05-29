@@ -1,6 +1,7 @@
 from flask import Flask, render_template_string, request, send_from_directory
 import os
 import random
+import subprocess
 
 app = Flask(__name__)
 UPLOAD_FOLDER = '/tmp'
@@ -68,7 +69,6 @@ HTML_TEMPLATE = '''
         </div>
 
         <div class="card shadow-sm p-4">
-            <h4 class="mb-3 text-center">Data Reports</h4>
             <iframe src="/index.html"></iframe>
         </div>
     </div>
@@ -83,13 +83,24 @@ def upload():
     os_list = load_os_list()
 
     if request.method == "POST":
+        selected_os = request.form.get("selected_os")
+        random_suffix = random.randint(1000, 9999)
+        upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], f"{selected_os}_{random_suffix}")
+        os.makedirs(upload_dir, exist_ok=True)
+
         for key in ['csv1', 'csv2']:
             file = request.files[key]
             if file and file.filename.endswith('.csv'):
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+                save_path = os.path.join(upload_dir, file.filename)
                 file.save(save_path)
                 filenames.append(file.filename)
-        selected_os = request.form.get("selected_os")
+
+        # Call the bash script with the upload directory
+        try:
+            subprocess.run(["/root/process_files.sh", upload_dir], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running script: {e}")
+            return f"<h4>Error running processing script: {e}</h4>", 500
 
     return render_template_string(HTML_TEMPLATE, filenames=filenames, selected_os=selected_os, os_list=os_list)
 
