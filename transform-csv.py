@@ -1,51 +1,47 @@
 import csv
 import sys
-import os
 
 def main():
     if len(sys.argv) < 4:
-        print("Usage: python transform_csv.py <input_file.csv> <special_column_index> <output_filename.csv>")
+        print("Usage: python prepare_for_mysql.py <input.csv> <special_col_index> <output.csv>")
         sys.exit(1)
 
     input_file = sys.argv[1]
-    special_col_index = int(sys.argv[2])  # 0-based index
-    output_file = os.path.join(os.getcwd(), sys.argv[3])
+    special_col_index = int(sys.argv[2])
+    output_file = sys.argv[3]
 
     with open(input_file, mode='r', encoding='utf-8', newline='') as infile, \
          open(output_file, mode='w', encoding='utf-8', newline='') as outfile:
 
         reader = csv.reader(infile, quotechar='"')
-        writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
 
         for row in reader:
             if not row:
                 continue
 
-            # Replace commas in special column
+            # Replace commas with semicolons in the special column
             if len(row) > special_col_index:
                 row[special_col_index] = row[special_col_index].replace(',', ';')
 
-            # Remove double quotes from all columns except the special one
-            cleaned_row = [
-                col if i == special_col_index else col.replace('"', '')
-                for i, col in enumerate(row)
-            ]
+            # Remove quotes from all columns except the special column
+            cleaned_row = []
+            for i, col in enumerate(row):
+                if i == special_col_index:
+                    cleaned_row.append(f'"{col}"')  # Keep quotes and newlines
+                else:
+                    cleaned_row.append(col.strip('"'))
 
-            # Pad to ensure at least 13 columns
+            # Ensure at least 13 columns (padding if needed)
             while len(cleaned_row) < 13:
                 cleaned_row.append('')
 
-            # Ensure final structure ends with final column (may be empty) + £
-            if len(cleaned_row) == 13:
-                cleaned_row.append('£')
-            elif len(cleaned_row) == 14:
-                cleaned_row.append('£')
-            elif len(cleaned_row) > 14:
-                cleaned_row = cleaned_row[:14] + ['£']
+            # Append '£' field and write full row with no newline
+            cleaned_row.append('£')
+            outfile.write(','.join(cleaned_row))  # NO newline here
 
-            writer.writerow(cleaned_row)
+        outfile.flush()
 
-    print(f"✅ Transformation complete. Output written to: {output_file}")
+    print(f"✅ File written: {output_file} — ready for MySQL LOAD with LINES TERMINATED BY '£'")
 
 if __name__ == "__main__":
     main()
